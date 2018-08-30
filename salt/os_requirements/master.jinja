@@ -1,0 +1,67 @@
+##### Primary configuration settings #####
+##########################################
+show_jid: True
+
+cli_summary: True
+
+minion_data_cache: True
+
+vault:
+    url: {{ pillar['salt_config']['vaulturl'] }}
+    auth:
+        method: {{ pillar['salt_config']['vaultauthmethod'] }}
+        token: {{ pillar['salt_config']['vaulttoken'] }}
+    policies:
+        - root
+
+consul.host: {{ pillar['salt_config']['consulhost'] }}
+consul.port: {{ pillar['salt_config']['consulport'] }}
+consul.token: {{ pillar['salt_config']['consultoken'] }}
+consul.scheme: {{ pillar['salt_config']['consulscheme'] }}
+consul.consistency: {{ pillar['salt_config']['consulconsistency'] }}
+consul.dc: {{ pillar['salt_config']['consuldc'] }}
+consul.verify: {{ pillar['salt_config']['consulverify'] }}
+
+cache: consul
+
+influxdb.db: '{{ pillar['salt_config']['pgdb'] }}'
+returner.pgjsonb.user: '{{ pillar['salt_config']['pguser'] }}'
+returner.pgjsonb.password: '{{ pillar['salt_config']['pgpassword'] }}'
+returner.pgjsonb.host: '{{ pillar['salt_config']['pghost'] }}'
+returner.pgjsonb.port: {{ pillar['salt_config']['pgport'] }}
+
+master_job_cache: pgjsonb
+
+consul_config:
+  consul.host: {{ pillar['salt_config']['consulhost'] }}
+  consul.port: {{ pillar['salt_config']['consulport'] }}
+  consul.token: {{ pillar['salt_config']['consultoken'] }}
+
+ext_pillar:
+  - git:
+    - master git@bitbucket.org:m3rl1n/saltpillar.git:
+      - pubkey: /etc/salt/id_rsa.pub
+      - privkey: /etc/salt/id_rsa
+  - consul: consul_config root=salt-shared
+
+
+peer_run:
+    .*:
+        - vault.generate_token
+
+peer:
+  .*:
+    - x509.sign_remote_certificate
+
+fileserver_backend:
+  - git
+
+gitfs_provider: pygit2
+
+gitfs_remotes:
+  - git@bitbucket.org:m3rl1n/saltroot.git:
+    - pubkey: /etc/salt/id_rsa.pub
+    - privkey: /etc/salt/id_rsa
+
+gitfs_saltenv_whitelist:
+  - base
